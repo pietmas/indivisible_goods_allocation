@@ -488,18 +488,14 @@ class Barman:
             k = 1  # Initialize k to 1
             # Calculate the price of the least spender's bundle
             price_least_spender = np.dot(self.p, self.x[i])
-            # print(f"Least spender: {i}, price: {price_least_spender}\n")
 
             while k in self.hierarchy and not self.is_3epsilon_pEF1():
                 level = k
-                # print(f"Level: {level}\n")
-
+                
                 # Check for ε-path violators at the current hierarchy level
                 there_is_e_path_violator, alternating_path = self.e_path_violator(level, i, price_least_spender)
-                # print(f"Path violator: {there_is_e_path_violator}\n")
-                # print(f"Alternating path: {alternating_path}\n")
+
                 if there_is_e_path_violator:
-                    # print(f"Performing swap\n")
 
                     # Perform the swap operation for the identified ε-path violator
                     self.perform_swap(alternating_path)
@@ -521,12 +517,11 @@ class Barman:
                 alpha2 = self.raising_prices_alpha2(i, a_h)
                 alpha3, alpha3_2 = self.raising_prices_alpha3(i, a_h)
 
+
                 if alpha3_2:
                     alpha3 = alpha3_2
-                    
                 # Determine the smallest alpha
                 alpha = min(alpha1, alpha2, alpha3)
-
                 # Adjust the prices
                 for j in x_h:
                     self.p[j] *= alpha

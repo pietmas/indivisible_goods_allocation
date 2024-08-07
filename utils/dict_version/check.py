@@ -8,7 +8,7 @@ from algorithms.dict_version.adjustedwinner import AdjustedWinner
 import numpy as np
 
 class Checker:
-    def __init__(self, n_agents, n_items, valuation, allocation, method = "bf", print_output = False):
+    def __init__(self, n_agents, n_items, valuation, allocation, method = "bf"):
         self.n_items = n_items
         self.n_agents = n_agents
         self.items = list(range(n_items))
@@ -16,7 +16,6 @@ class Checker:
         self.valuation = valuation
         self.allocation = allocation
         self.method = method
-        self.print_output = print_output
 
     def powerset(self, iterable):
         """
