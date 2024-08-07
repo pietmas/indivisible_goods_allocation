@@ -26,13 +26,33 @@ This project provides a collection of algorithms for solving the problem of allo
 
 ## Folder Structure
 
-\```
-├── algorithms
-├── utils
-├── allocation_algorithm_example.ipynb
-├── README.md
-└── LICENSE
-\```
+```bash
+│   allocation_algorithm_example.ipynb
+│   LICENSE
+│   README.md
+│
+├───algorithms
+│   │   barman.py
+│   │   brute_force.py
+│   │   envy_cycle.py
+│   │   garg.py
+│   │   generalized_adjusted_winner.py
+│   │   minmaxenvy_trade.py
+│   │   mnw.py
+│   │   round_robin.py
+│   │   seq_min_envy.py
+│   │
+│   └───dict_version
+│       │   adjustedwinner.py
+│       │   barman.py
+│       │   brute_force.py
+│       └── mnw.py
+│
+└───utils
+    │   check.py
+    │   utils.py
+    └───visualization.py
+```
 
 ## Usage
 
