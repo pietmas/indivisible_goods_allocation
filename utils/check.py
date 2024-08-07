@@ -139,12 +139,12 @@ class Checker:
         n_agents = len(agents)
         
         # Generate all possible distributions of items to agents
-        distributions = self.generate_distributions_optimized(n_items, n_agents)
+        distributions = self.generate_distributions(n_items, n_agents)
 
         # Iterate over each distribution
         for distribution in distributions:
             # Generate unique sets of items according to the current distribution
-            for unique_set in self.distribute_items_according_to_distribution_optimized(items, distribution):
+            for unique_set in self.distribute_items_according_to_distribution(items, distribution):
                 # Initialize an allocation matrix with zeros
                 allocation_matrix = np.zeros((self.n_agents, self.n_items), dtype=int)
 
