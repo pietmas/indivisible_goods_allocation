@@ -18,7 +18,7 @@ class GeneralizedAdjustedWinner:
         self.items = self.initialize_items(items)    
 
         self.num_agents = 2
-        self.num_items = len(self.items)
+        self.num_items = len(self.valuations[0])
         self.allocation = np.zeros((self.num_agents, self.num_items), dtype=int)
         self.winner = None
         self.looser = None
@@ -100,7 +100,7 @@ class GeneralizedAdjustedWinner:
         self.allocation = np.zeros((self.num_agents, self.num_items), dtype=int)
 
 
-    def allocate(self):
+    def allocate(self, items=None):
         """
         Allocate items to agents using the Adjusted Winner procedure.
         
@@ -115,13 +115,15 @@ class GeneralizedAdjustedWinner:
         """
         # Initialize a list to store all EF1 allocations
         all_allocation = []
-
+        if items is None:
+            items = self.items
         # Initially allocate items to the winner based on their positive valuations
-        for item in self.items:
+        for item in items:
             if self.valuations[self.winner, item] > 0:
-                self.allocation[self.winner][item] = 1
+                print(self.winner, item, self.allocation)
+                self.allocation[self.winner, item] = 1
             else:
-                self.allocation[self.looser][item] = 1
+                self.allocation[self.looser, item] = 1
         
         # Sort the allocated items based on the ratio of the loser's valuation to the winner's valuation
         ordered_allocation = self.ordered_ratios(np.where(self.allocation[self.winner] == 1)[0])

@@ -1,4 +1,6 @@
 import numpy as np
+import threading
+
  
 class GargAlgorithm:
     """
@@ -62,6 +64,27 @@ class GargAlgorithm:
             return item
         
         
+    def epsilon_round_valuations(self):
+        """
+        Adjusts each valuation in the matrix to be a power of 1 + epsilon.
+
+        This method rounds each non-zero valuation in the valuation matrix to the nearest power of 1 + ε,
+        ensuring the adjusted valuations are more manageable for the algorithm.
+
+        Returns:
+        None
+        """
+        # Iterate over each agent's valuations
+        for i in range(self.nagents):
+            # Iterate over each item for the current agent
+            for j in range(self.nitems):
+                if self.epsilon > 0 and self.valuation[i][j] > 0:  # Ensure ε is positive to avoid division by zero
+                    # Round each valuation to the nearest multiple of ε
+                    self.valuation[i][j] = (1 + self.epsilon) ** np.ceil(np.log(self.valuation[i][j]) / np.log(1 + self.epsilon))
+                elif self.valuation[i][j] == 0:
+                    # If the valuation is zero, it remains zero
+                    self.valuation[i][j] = 0
+        
     def welfare_maximizing_allocation(self):
         """
         Finds a welfare-maximizing allocation of items to agents based on their valuations.
@@ -83,8 +106,8 @@ class GargAlgorithm:
         # Iterate over each item to allocate it to the agent with the highest valuation
         for j in self.item:
             # Find the agent with the highest valuation for item j
-            agent_id = np.argmax(self.valuation[:, j])
-
+            id = np.argmax(self.valuation[self.agent, j])
+            agent_id = self.agent[id]
             # Allocate item j to the agent with the highest valuation
             if agent_id is not None:
                 self.x[agent_id][j] = 1
@@ -369,7 +392,7 @@ class GargAlgorithm:
         
     def path_violator(self, level, least_spender, price_least_spender):
         """
-        Determine if an agent at a given hierarchy level is an path violator along the alternating path P in the hierarchy.
+        Determine if an agent at a given hierarchy level is an ε-path violator along the alternating path P in the hierarchy.
 
         Parameters:
         level (int): The hierarchy level being considered.
@@ -378,19 +401,17 @@ class GargAlgorithm:
 
         Returns:
         tuple: A tuple containing:
-            - bool: True if an agent at the given hierarchy level is an path violator, False otherwise.
-            - list: The alternating path if an path violator is found, None otherwise.
+            - bool: True if an agent at the given hierarchy level is an ε-path violator, False otherwise.
+            - list: The alternating path if an ε-path violator is found, None otherwise.
         """
         # Get the list of agents at the current hierarchy level
         h = self.hierarchy[level]
         
         # Iterate over each agent at the current hierarchy level
         for agent in h:
-            #print(f"least_spender: {least_spender}, agent: {agent}, level: {level}")
             if agent != least_spender:
                 # Build the alternating path from the least spender to the current agent
                 alternating_path = self.build_alternating_path(least_spender, agent, level)
-                #print(f"Alternating path: {alternating_path}\n")
                 if alternating_path:
                     # The good in the alternating path to check
                     good = alternating_path[1]
@@ -398,7 +419,7 @@ class GargAlgorithm:
                     # Calculate the price of the agent's bundle without the specific good
                     price_agent_without_good = np.dot(self.p, self.x[agent]) - self.p[good]
                     
-                    # Check if removing the item from the agent's bundle results in a price greater than the least spender's bundle price
+                    # Check if removing the item from the agent's bundle results in a price greater than (1 + ε) times the least spender's bundle price
                     if price_agent_without_good > price_least_spender:
                         return True, alternating_path
 
@@ -409,7 +430,7 @@ class GargAlgorithm:
         """
         Performs a swap of goods between agents along the provided alternating path.
 
-        This method swaps the specified good between the path violator and the previous agent in the hierarchy.
+        This method swaps the specified good between the ε-path violator and the previous agent in the hierarchy.
 
         Parameters:
         alternation_path (list): A list representing the alternating path of agents and goods.
@@ -417,7 +438,7 @@ class GargAlgorithm:
         Returns:
         None
         """
-        # 'last_agent' is the current path violator, and 'previous_agent' is the agent to swap with.
+        # 'last_agent' is the current ε-path violator, and 'previous_agent' is the agent to swap with.
         last_agent = alternation_path[0]
         good = alternation_path[1]
         previous_agent = alternation_path[2]
@@ -445,9 +466,9 @@ class GargAlgorithm:
     def phase_2_and_phase_3(self):
         """
         Executes phases 2 and 3 of the allocation algorithm, iteratively ensuring the allocation
-        satisfies the pEF1 condition by identifying and resolving path violators.
+        satisfies the 3ε-pEF1 condition by identifying and resolving ε-path violators.
 
-        The method identifies the least spender, builds a hierarchy of agents, checks for path violators,
+        The method identifies the least spender, builds a hierarchy of agents, checks for ε-path violators,
         performs necessary swaps, and adjusts prices to achieve the desired allocation properties.
 
         Returns:
@@ -458,25 +479,21 @@ class GargAlgorithm:
             # Identify the least spender and build the hierarchy starting from them
             L = self.least_spender()
             L = sorted(L)
-
             swap = False
             for i in L:
                 self.build_hierarchy(i)
                 k = 1
                 # Calculate the price of the least spender's bundle
                 price_least_spender = np.dot(self.p, self.x[i])
-
                 while k in self.hierarchy and not self.is_pEF1():
                     level = k
-                    # Check for path violators at the current hierarchy level
+                    # Check for ε-path violators at the current hierarchy level
                     there_is_path_violator, alternating_path = self.path_violator(level, i, price_least_spender)
-
+                 
                     if there_is_path_violator:
                         swap = True
-
-                        # Perform the swap operation for the identified path violator
+                        # Perform the swap operation for the identified ε-path violator
                         self.perform_swap(alternating_path)
-
                         break
                     else:
                         k += 1  # Move to the next agent in the hierarchy
@@ -484,17 +501,15 @@ class GargAlgorithm:
                     break
 
             if not swap:
-                # If not path violator is found, raise the prices
+                # Move to Phase 3 if not 3ε-pEF1
                 x_h = self.elements_in_hierarchies(L)
                 a_h = self.agent_in_hierarchies(L)
                 
-                # Compute alpha1 and alpha2
+                # Compute alpha1, alpha2, and alpha3 based on the pseudocode
                 alpha1 = self.raising_prices_alpha1(L, x_h, a_h)
-                alpha2, alpha2_2 = self.raising_prices_alpha2(L, a_h)
+                alpha2 = self.raising_prices_alpha2(L, a_h)
+              
                 
-                # Accelerate the process by using the second minimum alpha2 value if available
-                if alpha2_2 is not None:
-                    alpha2 = alpha2_2
                 
                 # Determine the smallest alpha
                 alpha = min(alpha1, alpha2)
@@ -502,6 +517,7 @@ class GargAlgorithm:
                 # Adjust the prices
                 for j in x_h:
                     self.p[j] *= alpha
+
 
                 
 
@@ -526,10 +542,8 @@ class GargAlgorithm:
         for agent in a_h:
             # Compute the MBB set and ratio for the current agent
             _, ratio_agent = self.compute_mbb_set(agent)
-
             for good in self.item:
                 if good not in x_h:
-
                     if self.p[good] > 0 and self.valuation[agent][good] > 0:
                         # Calculate alpha1 for goods with positive prices and positive valuations
                         alpha1 = ratio_agent / (self.valuation[agent][good] / self.p[good])
@@ -560,48 +574,30 @@ class GargAlgorithm:
         a_h (list of int): The list of agents in the hierarchy.
 
         Returns:
-        tuple: The computed min_alpha2 and second_min_alpha2 values.
+        float: The computed alpha2 value, representing the ratio of the minimum price among agents outside the hierarchy to the price of the least spender's bundle.
         """
-        # Calculate the price of the least spender's bundle
+        # Calculate the price of the least spender's bundle (agent L[0]).
         i = L[0]
         price_least_spender = np.dot(self.p, self.x[i])
 
-        # List to store prices
+        # List to store the prices of agents not in the hierarchy.
         prices = []
 
+        # Iterate over all agents.
         for agent in self.agent:
             if agent not in a_h:
+                # Calculate the total price of the agent's bundle and store it.
                 price_agent = np.dot(self.p, self.x[agent])
                 prices.append(price_agent)
         
-        # Ensure there are at least two prices to compare
-        if len(prices) < 2:
-            if price_least_spender == 0:
-                return np.inf, None
-            else:
-                return prices[0] / price_least_spender, None         
+        # Ensure the least spender's price is not zero to avoid division by zero.
+        if price_least_spender == 0:
+            # If the least spender's price is zero, return infinity as alpha2.
+            return np.inf
         else:
-            # Sort the prices in ascending order
-            sorted_prices = sorted(prices)
-
-            # Extract the two minimum prices
-            min_price = sorted_prices[0]
-            second_min_different_price = 0
-            for price in sorted_prices:
-                if price != min_price:
-                    second_min_different_price = price
-                    break
-            second_min_price = second_min_different_price
-
-            # Calculate alpha2 based on the minimum prices
-            if price_least_spender == 0:
-                min_alpha2 = np.inf
-                second_min_alpha2 = np.inf
-            else:
-                min_alpha2 = min_price / price_least_spender
-                second_min_alpha2 = second_min_price / price_least_spender
-
-            return min_alpha2, second_min_alpha2
+            # Calculate alpha2 as the ratio of the minimum price (outside the hierarchy) to the least spender's price.
+            return prices[0] / price_least_spender
+        
         
 
     def elements_in_hierarchy(self):
@@ -670,7 +666,7 @@ class GargAlgorithm:
         This method performs the following steps:
         1. Rounds the valuations using epsilon.
         2. Initializes the first phase of the allocation.
-        3. Checks if the allocation satisfies the pEF1 condition.
+        3. Checks if the allocation satisfies the 3ε-pEF1 condition.
         4. If not, it runs phases 2 and 3 to achieve the desired allocation properties.
 
         Returns:
@@ -680,11 +676,44 @@ class GargAlgorithm:
         # Initialize the first phase of the allocation
         self.phase_1_initialization()
 
-        # Check if the allocation satisfies the pEF1 condition
+        # Check if the allocation satisfies the 3ε-pEF1 condition
         if not self.is_pEF1():
             # Run phases 2 and 3 if the condition is not met
             self.phase_2_and_phase_3()
 
+        # Return the final allocation matrix and price vector
+        return self.x, self.p
+    
+    def run_algorithm_with_timeout(self, timeout=1/10):
+        """
+        Runs the complete allocation algorithm.
+
+        This method performs the following steps:
+        1. Rounds the valuations using epsilon.
+        2. Initializes the first phase of the allocation.
+        3. Checks if the allocation satisfies the 3ε-pEF1 condition.
+        4. If not, it runs phases 2 and 3 to achieve the desired allocation properties.
+
+        Returns:
+        tuple: A tuple containing the final allocation matrix and price vector.
+        """
+        # Round the valuations using epsilon
+        # Initialize the first phase of the allocation
+        self.phase_1_initialization()
+        # Check if the allocation satisfies the 3ε-pEF1 condition
+        if not self.is_pEF1():
+            func = self.phase_2_and_phase_3
+            # Create a thread to run the function
+            thread = threading.Thread(target=func, args=(), kwargs={})
+
+            # Start the thread
+            thread.start()
+
+            # Wait for the thread to complete with the given timeout
+            thread.join(timeout)
+            # Run phases 2 and 3 if the condition is not met
+            if thread.is_alive():
+                return None, None  # Indicate the function did not complete
         # Return the final allocation matrix and price vector
         return self.x, self.p
 

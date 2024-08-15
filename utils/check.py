@@ -7,6 +7,9 @@ from algorithms.barman import Barman
 from algorithms.generalized_adjusted_winner import GeneralizedAdjustedWinner
 from algorithms.dict_version.adjustedwinner import AdjustedWinner
 import numpy as np
+from gurobipy import Model, GRB, quicksum
+from scipy.optimize import linear_sum_assignment
+import math
 
 class Checker:
     def __init__(self, n_agents, n_items, valuation, allocation, method = "bf"):
@@ -253,8 +256,9 @@ class Checker:
                 # Check if removing any single item from agent_j's allocation
                 # would eliminate the envy from agent_i
                 for item in np.where(allocation[agent_j] == 1)[0]:
-                    if valuation_i_for_own < valuation_i_for_j - valuation[agent_i][item]:
-                        return False  # Found a pair that violates the EFX condition
+                    if valuation[agent_i][item] > 0:
+                        if valuation_i_for_own < valuation_i_for_j - valuation[agent_i][item]:
+                           return False  # Found a pair that violates the EFX condition
 
         return True
 
@@ -393,15 +397,21 @@ class Checker:
             new_allocations = self.compute_ef1_and_po_allocations(items=all_items)
         elif self.method == "mnw":
             new_allocations = self.maximize_nash_welfare(items=all_items)
-        elif self.method == "fea":
-            fea = GargAlgorithm(self.n_agents, self.n_items, self.valuation, items=all_items)
+        elif self.method == "barman":
+            fea = Barman(self.n_agents, self.n_items, self.valuation, item=all_items)
             new_allocations, _ = fea.run_algorithm()
+        elif self.method == "garg":
+            fea = GargAlgorithm(self.n_agents, self.n_items, self.valuation, item=all_items)
+            new_allocations, _ = fea.run_algorithm_with_timeout()
+            if new_allocations is None:
+                return None, None
+            if not self.is_ef1_allocation(allocation=new_allocations, items=all_items):
+                return None, None
         elif self.method == "gen_adjusted_winner":
             aw = GeneralizedAdjustedWinner(self.valuation, items=all_items)
             new_allocations = aw.get_allocation()
-        elif self.method == "adjusted_winner":
-            aw = AdjustedWinner(self.valuation)
-            new_allocations = aw.get_allocation(item_subset=all_items)
+        else:
+            raise ValueError("Invalid method specified. Please choose from 'bf', 'mnw', 'barman', 'garg', or 'gen_adjusted_winner'.")
         
         is_monotonic = False
         na = []
@@ -415,9 +425,11 @@ class Checker:
         
         # Iterate through each new allocation
         for new_allocation in new_allocations:
+            
             # Calculate the new utility for each agent in the new allocation
             new_utility = np.dot(self.valuation, new_allocation.T).diagonal()
-            
+
+
             # Check if any agent's utility decreases
             if np.all(new_utility <= original_utility):
                 return True, None  # Found at least one allocation that satisfies resource monotonicity
@@ -443,12 +455,22 @@ class Checker:
         # Check resource monotonicity for all combinations of item removals
         for removed_item_combination in self.remove_items_from_powerset(self.items):
             if removed_item_combination:  # Skip the case where no items are removed
+
                 is_monotonic, na = self.is_resource_monotonic(list(removed_item_combination))
-                if not is_monotonic:
+
+                if is_monotonic is None:
+                    return None, None, None
+                
+                
+                if not res_monotonic and not is_monotonic:
+                    removed_item.append(removed_item_combination)
+                    new_allocations.append(na)
+                elif not is_monotonic:
                     res_monotonic = False
                     removed_item.append(removed_item_combination)
                     new_allocations.append(na)
-                    break  # Stop checking further if a violation is found
+                    # Stop checking further if a violation is found
+                
 
         return res_monotonic, removed_item if not res_monotonic else None, new_allocations if not res_monotonic else None
 
@@ -476,15 +498,22 @@ class Checker:
             new_allocations = self.compute_ef1_and_po_allocations(agents=agents)
         elif self.method == "mnw":
             new_allocations = self.maximize_nash_welfare(agents=agents)
-        elif self.method == "fea":
-            fea = Barman(self.n_agents, self.n_items, self.valuation, agents=agents)
+        elif self.method == "barman":
+            fea = Barman(self.n_agents, self.n_items, self.valuation, agent=agents)
             new_allocations, _ = fea.run_algorithm()
+        elif self.method == "garg":
+            fea = GargAlgorithm(self.n_agents, self.n_items, self.valuation, agent=agents)
+            new_allocations, _ = fea.run_algorithm_with_timeout()
+            if new_allocations is None:
+                return None, None
+            if not self.is_ef1_allocation(allocation=new_allocations, agents=agents):
+                return None, None
 
         is_monotonic = False
         na = []
 
         # Ensure new_allocations is a list
-        if isinstance(new_allocations, dict):
+        if not isinstance(new_allocations, list):
             new_allocations = [new_allocations]
 
         # Calculate the original utility for each agent
@@ -523,7 +552,8 @@ class Checker:
         for remove_agents in self.powerset(agents):
             if len(remove_agents) < len(agents):  # Skip the full set of agents
                 is_monotonic, na = self.is_population_monotonic(remove_agents)
-                
+                if is_monotonic is None:
+                    return None, None, None
                 if not is_monotonic:
                     all_monotonic = False
                     pop.append(remove_agents)
@@ -631,7 +661,7 @@ class Checker:
         """
         return np.dot(self.valuation, allocation.T).diagonal()
     
-    def compute_nash_welfare(self, allocation):
+    def compute_nash_welfare(self, allocation, agents=None):
         """
         Compute the Nash Welfare for a given allocation.
 
@@ -644,44 +674,119 @@ class Checker:
         """
         # Calculate the utility for each agent
         utility = np.dot(self.valuation, allocation.T).diagonal()
-
-        # Compute the Nash Welfare by taking the product of the utilities
-        nw = np.prod(utility) 
+        log_utility = np.zeros(self.n_agents, dtype=float)
+        for i in agents:
+            if utility[i] == 0:
+                log_utility[i] = - float("inf")
+            else:
+                log_utility[i] = math.log(utility[i]) 
+        nw = np.sum(log_utility)  # Calculate Nash welfare as the product of utilities
         return nw
-
-    def maximize_nash_welfare(self, items=None, agents=None):
+        
+    
+    def maximize_nash_welfare(self, agents=None, items=None):
         """
-        Find the allocation that maximizes the Nash Welfare.
-
-        Args:
-            items (list): A list of items to be allocated. If None, uses self.items.
-            agents (list): A list of agents. If None, uses self.agents.
-
+        Compute the maximum Nash welfare allocation for a given valuation matrix using brute force.
+        
+        Parameters:
+            valuation (numpy.ndarray): A 2D array where valuation[i][j] is the value agent i assigns to item j.
+            
         Returns:
-            list: A list of allocations that maximize the Nash Welfare.
+            numpy.ndarray: A matrix representing the maximum Nash welfare allocation.
         """
-        if items is None:
-            items = self.items
         if agents is None:
             agents = self.agents
+        if items is None:
+            items = self.items
+        max_nash_welfare_allocation = []
+        max_nash_welfare = -1
+        max_nash_welfare_allocation = []
 
-        max_nw = 0
-        best_allocations = []
+        if len(items) < len(agents):
+            valuation_matrix = self.valuation[np.ix_(agents, items)]
+            allocation = np.zeros((self.n_agents, self.n_items), dtype=int)
+            agents, items, max_prod = self.maximize_product_matching_with_dummy(valuation_matrix)
+            for a, i in list(zip(agents, items)):
+                allocation[a, i] = 1
+            max_nash_welfare_allocation.append(allocation)
+        else: 
+            for allocation in self.all_allocations(agents=agents, items=items):
+                nw = self.compute_nash_welfare(allocation, agents=agents)
+                if nw > max_nash_welfare:
+                    max_nash_welfare = nw
+                    max_nash_welfare_allocation = [allocation]
+                if nw == max_nash_welfare:
+                    max_nash_welfare_allocation.append(allocation)
+        return max_nash_welfare_allocation
 
-        # Iterate through all possible allocations
-        for allocation in self.all_allocations(agents=agents, items=items):
-            # Compute the Nash Welfare for the current allocation
-            nw = self.compute_nash_welfare(allocation)
 
-            # Update the best allocations if a higher Nash Welfare is found
-            if nw > max_nw:
-                max_nw = nw
-                best_allocations = [allocation]
-            elif nw == max_nw:
-                best_allocations.append(allocation)
+    def maximize_nash_welfare_new(self, agents=None, items=None):
 
-        return best_allocations
+        if agents is None:
+            agents = self.agents
+        if items is None:
+            items = self.items
+
+        valuation_matrix = self.valuation[np.ix_(agents, items)]
+        allocation = np.zeros((self.n_agents, self.n_items), dtype=int)
+
     
+        if len(items) < len(agents):
+            agents, items, max_prod = self.maximize_product_matching_with_dummy(valuation_matrix)
+            for a, i in list(zip(agents, items)):
+                allocation[a, i] = 1
+        else:
+            n = len(agents)
+            m = len(items)
+            t_agents = list(range(n))
+            t_items = list(range(m))
+            model = Model()
+            model.setParam('OutputFlag', 0)  # Mute Gurobi output
+
+            x = model.addVars(t_agents, t_items, vtype=GRB.BINARY)
+
+            model.addConstrs(quicksum(x[i,j] for i in t_agents) == 1 for j in t_items)
+            W = model.addVars(t_agents) # log utility
+            for i in t_agents:
+                u = quicksum(valuation_matrix[i,j] * x[i,j] for j in t_items)
+
+                for k in range(1, int(sum(valuation_matrix[i,j] for j in t_items)) + 1):
+                    model.addConstr(W[i] <= math.log(k) + (math.log(k+1) - math.log(k)) * (u - k))
+            model.setObjective(quicksum(W[i] for i in t_agents), GRB.MAXIMIZE)
+            model.optimize()
+
+            # Extract the optimal allocation
+            for i in range(n):
+                for j in range(m):
+                    if x[i, j].X > 0.5:
+                        allocation[agents[i]][items[j]] = 1
+
+        return allocation
+    
+    def maximize_product_matching_with_dummy(self, weights):
+        n, m = weights.shape
+
+        # Step 1: Transform weights to logarithms
+        log_weights = np.log(weights)
+        
+        # Step 2: Add dummy items with log(1) = 0 weight
+        if n > m:
+            dummy_weights = np.zeros((n, n - m))
+            log_weights = np.hstack((log_weights, dummy_weights))
+        
+        # Step 3: Use the Hungarian algorithm to find the maximum weight matching
+        row_ind, col_ind = linear_sum_assignment(-log_weights)  # scipy's function finds the min cost assignment, so use -log_weights
+        
+        # Step 4: Filter out the dummy matches
+        valid_matches = col_ind < m
+        matched_agents = row_ind[valid_matches]
+        matched_items = col_ind[valid_matches]
+        
+        # Step 5: Calculate the maximum product from the matching
+        max_product = np.prod(weights[matched_agents, matched_items])
+        
+        return matched_agents, matched_items, max_product
+
 
     
     

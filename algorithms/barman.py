@@ -515,11 +515,9 @@ class Barman:
                 # Compute alpha1, alpha2, and alpha3 based on the pseudocode
                 alpha1 = self.raising_prices_alpha1(i, x_h, a_h)
                 alpha2 = self.raising_prices_alpha2(i, a_h)
-                alpha3, alpha3_2 = self.raising_prices_alpha3(i, a_h)
+                alpha3 = self.raising_prices_alpha3(i, a_h)
 
 
-                if alpha3_2:
-                    alpha3 = alpha3_2
                 # Determine the smallest alpha
                 alpha = min(alpha1, alpha2, alpha3)
                 # Adjust the prices
@@ -634,47 +632,14 @@ class Barman:
         least_spender_price = np.dot(self.p, self.x[i])
 
         # Ensure there are at least two prices to compare
-        if len(prices) < 2:
-            if least_spender_price == 0:
-                return np.inf, None
-            else:
-                s_1 = np.ceil(np.log(min_price_outside_h / least_spender_price) / np.log(1 + self.epsilon))
-                
-                alpha3 = (1 + self.epsilon) ** s_1
-                return alpha3, None
+        if least_spender_price == 0:
+            return np.inf, None
         else:
-            # Sort the prices in ascending order
-            sorted_prices = sorted(prices)
-
-            # Extract the two minimum prices
-            min_price = sorted_prices[0]
-            second_min_different_price = 0
-            for price in sorted_prices:
-                if price != min_price:
-                    second_min_different_price = price
-                    break
-            second_min_price = second_min_different_price
-
-            # Calculate alpha2 based on the minimum prices
-            if least_spender_price == 0:
-                alpha3 = np.inf
-                alpha3_2 = np.inf
-            else:
-                ratio_1 = min_price / least_spender_price
-                ratio_2 = second_min_price / least_spender_price
-                if ratio_1 == 1:
-                    s_1 = 1
-                else:
-                    s_1 = np.ceil(np.log(min_price / least_spender_price) / np.log(1 + self.epsilon))
-                if ratio_2 == 1:
-                    s_2 = 1
-                else:
-                    s_2 = np.ceil(np.log(second_min_price / least_spender_price) / np.log(1 + self.epsilon))
-                
-                alpha3 = (1 + self.epsilon) ** s_1
-                alpha3_2 = (1 + self.epsilon) ** s_2
-
-            return alpha3, alpha3_2
+            s_1 = np.ceil(np.log(min_price_outside_h / least_spender_price) / np.log(1 + self.epsilon))
+            
+            alpha3 = (1 + self.epsilon) ** s_1
+            return alpha3, None
+        
 
     def elements_in_hierarchy(self):
         """

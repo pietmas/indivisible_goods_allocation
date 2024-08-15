@@ -1,6 +1,8 @@
 import numpy as np
 from itertools import chain, combinations, permutations
 from gurobipy import Model, GRB, quicksum
+from scipy.optimize import linear_sum_assignment
+
 
 """
 These functions are used to compute the maximum Nash welfare allocation for a given valuation matrix.
@@ -88,58 +90,102 @@ def all_allocations(n_items, n_agents):
             allocation_matrix = np.array(allocation_matrix)
             yield allocation_matrix
 
-def compute_nash_welfare(valuation, allocation):
+def compute_nash_welfare(valuations, allocation):
+        """
+        Compute the Nash Welfare for a given allocation.
+
+        Args:
+            allocation (numpy.ndarray): The allocation matrix where each row represents an agent 
+                                        and each column represents an item.
+
+        Returns:
+            float: The Nash Welfare of the given allocation.
+        """
+        num_agents, num_items = allocation.shape
+        # Calculate the utility for each agent
+        utility = np.dot(valuations, allocation.T).diagonal()
+        log_utility = np.zeros(len(valuations))
+        for i in range(num_agents):
+            if utility[i] == 0:
+                log_utility[i] = - float("inf")
+            else:
+                log_utility[i] = np.log(utility[i]) 
+        nw = np.sum(log_utility)  # Calculate Nash welfare as the product of utilities
+        return nw
+        
+    
+def maximize_nash_welfare(n, m, valuation):
     """
-    Compute the Nash welfare for a given allocation.
+    Compute the maximum Nash welfare allocation for a given valuation matrix using brute force.
     
     Parameters:
+        n (int): Number of agents.
+        m (int): Number of items.
         valuation (numpy.ndarray): A 2D array where valuation[i][j] is the value agent i assigns to item j.
-        allocation (numpy.ndarray): A matrix representing an allocation of items to agents.
         
     Returns:
-        float: The Nash welfare of the allocation.
+        list of numpy.ndarray: A list of matrices representing the maximum Nash welfare allocations.
     """
-    utility = np.dot(valuation, allocation.T).diagonal()  # Calculate utility for each agent
-    nw = np.prod(utility)  # Calculate Nash welfare as the product of utilities
-    return nw
 
-def maximize_nash_welfare(n, m, valuations):
-    # Create a new model
-    model = Model("NashWelfare")
+    # Initialize variables to track the maximum Nash welfare and the corresponding allocations.
+    max_nash_welfare = -1
+    max_nash_welfare_allocation = []
 
-    # Suppress the output
-    model.setParam('OutputFlag', 0)
+    # If there are fewer items than agents, use a different strategy.
+    if m < n:
+        # Extract the relevant submatrix of valuations for the first 'm' items and 'n' agents.
+        valuation_matrix = valuation[np.ix_(n, m)]
+        allocation = np.zeros((n, m), dtype=int)  # Initialize an allocation matrix with zeros.
+        
+        # Use a function to maximize product matching with dummy agents/items to handle the allocation.
+        agents, items, max_prod = maximize_product_matching_with_dummy(valuation_matrix)
+        
+        # Assign items to agents based on the optimal matching.
+        for a, i in list(zip(agents, items)):
+            allocation[a, i] = 1
+        
+        # Add the resulting allocation to the list of max Nash welfare allocations.
+        max_nash_welfare_allocation.append(allocation)
+    
+    else:
+        # When there are at least as many items as agents, check all possible allocations.
+        for allocation in all_allocations(m, n):
+            # Compute the Nash welfare for the current allocation.
+            nw = compute_nash_welfare(valuation, allocation)
+            
+            # If the current Nash welfare is greater than the recorded maximum, update the max and reset the list.
+            if nw > max_nash_welfare:
+                max_nash_welfare = nw
+                max_nash_welfare_allocation = [allocation]
+            
+            # If the current Nash welfare equals the recorded maximum, add the allocation to the list.
+            if nw == max_nash_welfare:
+                max_nash_welfare_allocation.append(allocation)
+    
+    # Return the list of allocations that achieve the maximum Nash welfare.
+    return max_nash_welfare_allocation
 
-    # Create variables
-    x = model.addVars(n, m, vtype=GRB.BINARY, name="x")
-    U = model.addVars(n, vtype=GRB.CONTINUOUS, name="U")
-    logU = model.addVars(n, vtype=GRB.CONTINUOUS, name="logU")
-    z = model.addVar(vtype=GRB.CONTINUOUS, name="z")
+def maximize_product_matching_with_dummy(weights):
+        n, m = weights.shape
 
-    # Set objective to maximize z (logarithm of Nash welfare)
-    model.setObjective(z, GRB.MAXIMIZE)
+        # Step 1: Transform weights to logarithms
+        log_weights = np.log(weights)
+        
+        # Step 2: Add dummy items with log(1) = 0 weight
+        if n > m:
+            dummy_weights = np.zeros((n, n - m))
+            log_weights = np.hstack((log_weights, dummy_weights))
+        
+        # Step 3: Use the Hungarian algorithm to find the maximum weight matching
+        row_ind, col_ind = linear_sum_assignment(-log_weights)  # scipy's function finds the min cost assignment, so use -log_weights
+        
+        # Step 4: Filter out the dummy matches
+        valid_matches = col_ind < m
+        matched_agents = row_ind[valid_matches]
+        matched_items = col_ind[valid_matches]
+        
+        # Step 5: Calculate the maximum product from the matching
+        max_product = np.prod(weights[matched_agents, matched_items])
+        
+        return matched_agents, matched_items, max_product
 
-    # Add constraints
-    # Each item is allocated to exactly one agent
-    model.addConstrs((quicksum(x[i, j] for i in range(n)) == 1 for j in range(m)), "item_allocation")
-
-    # Define the utility for each agent
-    model.addConstrs((U[i] == quicksum(valuations[i][j] * x[i, j] for j in range(m)) for i in range(n)), "agent_utility")
-
-    # Linearize the logarithm of utilities
-    model.addConstrs((logU[i] <= U[i] for i in range(n)), "log_utility")
-
-    # Link the logarithm of the Nash welfare to individual utilities
-    model.addConstrs((z <= logU[i] for i in range(n)), "nash_link")
-
-    # Optimize the model
-    model.optimize()
-
-    # Extract the optimal allocation
-    allocation = np.zeros((n, m), dtype=int)
-    for i in range(n):
-        for j in range(m):
-            if x[i, j].X > 0.5:
-                allocation[i][j] = 1
-
-    return allocation
