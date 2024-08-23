@@ -120,7 +120,6 @@ class GeneralizedAdjustedWinner:
         # Initially allocate items to the winner based on their positive valuations
         for item in items:
             if self.valuations[self.winner, item] > 0:
-                print(self.winner, item, self.allocation)
                 self.allocation[self.winner, item] = 1
             else:
                 self.allocation[self.looser, item] = 1

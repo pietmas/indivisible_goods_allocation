@@ -1,8 +1,8 @@
 import numpy as np
 from itertools import chain, combinations, permutations
-from gurobipy import Model, GRB, quicksum
 from scipy.optimize import linear_sum_assignment
-
+from gurobipy import Model, GRB, quicksum
+import math
 
 """
 These functions are used to compute the maximum Nash welfare allocation for a given valuation matrix.
@@ -114,7 +114,7 @@ def compute_nash_welfare(valuations, allocation):
         return nw
         
     
-def maximize_nash_welfare(n, m, valuation):
+def maximize_nash_welfare_bruteforce(n, m, valuation):
     """
     Compute the maximum Nash welfare allocation for a given valuation matrix using brute force.
     
@@ -189,3 +189,70 @@ def maximize_product_matching_with_dummy(weights):
         
         return matched_agents, matched_items, max_product
 
+
+
+def maximize_nash_welfare_milp(n, m, valuation_matrix):
+    """
+    This function maximizes the Nash social welfare given a set of agents and items.
+    
+    Parameters:
+    - n: The number of agents.
+    - m: The number of items.
+    - valuation_matrix: A matrix of size n x m where valuation_matrix[i, j] represents
+                        the valuation of agent i for item j.
+    
+    The function returns an allocation matrix of size n x m where allocation[i, j] is 1
+    if item j is allocated to agent i, and 0 otherwise. The objective is to maximize 
+    the sum of the logarithms of the utilities (Nash social welfare) while ensuring 
+    each item is allocated to exactly one agent.
+    
+    The function employs a piecewise linear approximation to the log function to handle 
+    the non-linearity while ensuring that the optimization problem remains tractable 
+    as a mixed-integer linear program (MILP). The approximation uses segments connecting 
+    points (k, log(k)) and (k+1, log(k+1)) for k in [1, 999] to tightly bound the log 
+    function at each integer point.
+
+    Algorithm proposed by Caragiannis et al. (2019) in "The Unreasonable Fairness of Maximum Nash Welfare".
+    Link: https://dl.acm.org/doi/10.1145/3355902
+    """
+    
+    # List of agents and items
+    agents = list(range(n))
+    items = list(range(m))
+
+    # Initialize the Gurobi model
+    model = Model()
+    model.setParam('OutputFlag', 0)  # Mute Gurobi output
+
+    # Binary decision variables: x[i, j] indicates whether agent i receives item j
+    x = model.addVars(agents, items, vtype=GRB.BINARY)
+
+    # Constraint: Each item must be assigned to exactly one agent
+    model.addConstrs(quicksum(x[i,j] for i in agents) == 1 for j in items)
+
+    # Continuous variables representing the log utility for each agent
+    W = model.addVars(agents)  # log utility
+
+    # Iterate over each agent
+    for i in agents:
+        # Utility for agent i: sum of valuations for the items assigned to them
+        u = quicksum(valuation_matrix[i,j] * x[i,j] for j in items)
+
+        # Apply the piecewise linear approximation of the log function
+        # We use segments connecting points (k, log(k)) and (k+1, log(k+1)) for k in [1, 999]
+        # This ensures that W[i] is an upper bound on the log utility at every integer point
+        for k in range(1, 200):
+            model.addConstr(W[i] <= math.log(k) + (math.log(k+1) - math.log(k)) * (u - k))
+    
+    # Objective: Maximize the sum of log utilities (i.e., Nash welfare)
+    model.setObjective(quicksum(W[i] for i in agents), GRB.MAXIMIZE)
+    model.optimize()
+
+    # Extract the optimal allocation from the binary variables x[i, j]
+    allocation = np.zeros((n, m), dtype=int)
+    for i in range(n):
+        for j in range(m):
+            if x[i, j].X > 0.5:
+                allocation[i][j] = 1
+
+    return allocation
