@@ -3,6 +3,7 @@ from itertools import chain, combinations, permutations
 from scipy.optimize import linear_sum_assignment
 from gurobipy import Model, GRB, quicksum
 import math
+import cvxpy as cp
 
 """
 These functions are used to compute the maximum Nash welfare allocation for a given valuation matrix.
@@ -189,7 +190,36 @@ def maximize_product_matching_with_dummy(weights):
         
         return matched_agents, matched_items, max_product
 
+def maximize_nash_welfare_nl(n, m, valuation_matrix):
+    """
+    Solves a nonlinear discrete optimization problem to allocate items to agents.
 
+    Parameters:
+    n (int): Number of agents
+    m (int): Number of items
+    v (np.ndarray): Valuation matrix of shape (n, m) where v[i,j] is the value of item j for agent i
+
+    Returns:
+    np.ndarray: Optimal allocation matrix (n x m) where 1 indicates item j is allocated to agent i
+    """
+
+    # Define variables
+    x = cp.Variable((n, m), boolean=True)
+
+    # Objective function
+    obj = cp.sum(cp.log(cp.sum(cp.multiply(valuation_matrix, x), axis=1)))
+
+    # Constraints
+    constraints = [cp.sum(x, axis=0) == 1]
+
+    # Define and solve the problem
+    prob = cp.Problem(cp.Maximize(obj), constraints)
+    prob.solve(solver=cp.ECOS_BB)
+
+    # Extract solution
+    allocation = np.round(x.value).astype(int)
+
+    return allocation
 
 def maximize_nash_welfare_milp(n, m, valuation_matrix):
     """
