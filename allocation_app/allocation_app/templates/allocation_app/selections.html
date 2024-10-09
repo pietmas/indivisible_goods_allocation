@@ -1,0 +1,24 @@
+<!-- allocation_app/templates/allocation_app/selections.html -->
+
+{% extends 'allocation_app/base.html' %}
+{% block title %}Allocation App{% endblock %}
+
+{% block sidebar %}
+    <h2>Parameters</h2>
+    <form method="post" id="selection-form">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ num_form.num_agents.label_tag }}
+            {{ num_form.num_agents }}
+        </div>
+        <div class="form-group">
+            {{ num_form.num_items.label_tag }}
+            {{ num_form.num_items }}
+        </div>
+        <div class="form-group">
+            {{ alg_form.algorithm.label_tag }}
+            {{ alg_form.algorithm }}
+        </div>
+        <button type="submit">Next</button>
+    </form>
+{% endblock sidebar %}
