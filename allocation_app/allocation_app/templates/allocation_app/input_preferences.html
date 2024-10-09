@@ -1,0 +1,43 @@
+<!-- allocation_app/templates/allocation_app/input_preferences.html -->
+
+{% extends 'allocation_app/base.html' %}
+{% block title %}Input Preferences - Allocation App{% endblock %}
+
+{% block sidebar %}
+    <!-- Optionally, include a summary of selected parameters or navigation links -->
+    <h2>Summary</h2>
+    <p><strong>Agents:</strong> {{ agents|length }}</p>
+    <p><strong>Items:</strong> {{ items|length }}</p>
+    <p><strong>Algorithm:</strong> {{ algorithm }}</p>
+{% endblock sidebar %}
+
+{% block content %}
+<h1>Input Preferences</h1>
+<form method="post" id="preferences-form">
+    {% csrf_token %}
+    <table>
+        <thead>
+            <tr>
+                <th>Item / Agent</th>
+                {% for agent in agents %}
+                    <th>{{ agent }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+                <tr>
+                    <td>{{ item }}</td>
+                    {% for agent in agents %}
+                        <td>
+                            <input type="number" name="preferences-{{ item }}-{{ agent }}" step="any" required>
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit">Submit Preferences</button>
+</form>
+{% endblock content %}
+

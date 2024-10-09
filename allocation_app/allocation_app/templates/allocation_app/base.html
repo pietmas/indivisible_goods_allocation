@@ -1,0 +1,29 @@
+<!-- allocation_app/templates/allocation_app/base.html -->
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fair Allocation of Indivisible Items</title>
+    <link rel="stylesheet" href="{% static 'styles/styles.css' %}">
+    <script src="{% static 'scripts/main.js' %}"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Fair Allocation of Indivisible Items</h1>
+        </header>
+        <div class="main-content">
+            <aside class="sidebar">
+                {% block sidebar %}
+                {% endblock sidebar %}
+            </aside>
+            <section class="content">
+                {% block content %}
+                {% endblock content %}
+            </section>
+        </div>
+    </div>
+</body>
+</html>
