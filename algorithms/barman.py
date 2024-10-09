@@ -515,11 +515,10 @@ class Barman:
                 # Compute alpha1, alpha2, and alpha3 based on the pseudocode
                 alpha1 = self.raising_prices_alpha1(i, x_h, a_h)
                 alpha2 = self.raising_prices_alpha2(i, a_h)
-                alpha3 = self.raising_prices_alpha3(i, a_h)
-
+                alpha3, _ = self.raising_prices_alpha3(i, a_h)
 
                 # Determine the smallest alpha
-                alpha = min(alpha1, alpha2, alpha3)
+                alpha = np.min([alpha1, alpha2, alpha3])
                 # Adjust the prices
                 for j in x_h:
                     self.p[j] *= alpha
