@@ -8,16 +8,25 @@
     <form method="post" id="selection-form">
         {% csrf_token %}
         <div class="form-group">
+            {{ alg_form.algorithm.label_tag }}
+            {{ alg_form.algorithm }}
+            {% if alg_form.algorithm.errors %}
+                <span class="error-message" data-error="{{ alg_form.algorithm.errors|join:' ' }}"></span>
+            {% endif %}
+        </div>
+        <div class="form-group">
             {{ num_form.num_agents.label_tag }}
             {{ num_form.num_agents }}
+            {% if num_form.num_agents.errors %}
+                <span class="error-message" data-error="{{ num_form.num_agents.errors|join:' ' }}"></span>
+            {% endif %}
         </div>
         <div class="form-group">
             {{ num_form.num_items.label_tag }}
             {{ num_form.num_items }}
-        </div>
-        <div class="form-group">
-            {{ alg_form.algorithm.label_tag }}
-            {{ alg_form.algorithm }}
+            {% if num_form.num_items.errors %}
+                <span class="error-message" data-error="{{ num_form.num_items.errors|join:' ' }}"></span>
+            {% endif %}
         </div>
         <button type="submit">Next</button>
     </form>

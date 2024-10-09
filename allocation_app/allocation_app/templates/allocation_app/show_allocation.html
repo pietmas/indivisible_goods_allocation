@@ -6,9 +6,15 @@
 {% block sidebar %}
     <!-- Optionally, include a summary of selected parameters or navigation links -->
     <h2>Summary</h2>
+    <p><strong>Algorithm:</strong> {{ algorithm }}</p>
     <p><strong>Agents:</strong> {{ agents|length }}</p>
     <p><strong>Items:</strong> {{ items|length }}</p>
-    <p><strong>Algorithm:</strong> {{ algorithm }}</p>
+    <p>
+        <a href="{% url 'input_preferences' %}">Return to Input Preferences</a>
+    </p>
+    <p>
+        <a href="{% url 'selections' %}">Return to Parameter Selection</a>
+    </p>
 {% endblock sidebar %}
 
 {% block content %}
@@ -17,17 +23,17 @@
     <thead>
         <tr>
             <th>Item / Agent</th>
-            {% for agent in agents %}
-                <th>{{ agent }}</th>
+            {% for item in items %}
+                <th>{{ item }}</th>
             {% endfor %}    
         </tr>
     </thead>
     <tbody>
         {% load html_filters %}
-        {% for item_index in items_indices %}
+        {% for agent_index in agents_indices %}       
             <tr>
-                <td>{{ items|get_item:item_index }}</td>         
-                {% for agent_index in agents_indices %}
+                <td>{{ agents|get_item:agent_index }}</td>         
+                {% for item_index in items_indices %}
                     <td>{{ preferences|get_item:agent_index|get_item:item_index }}</td>
                 {% endfor %}
             </tr>
@@ -35,6 +41,7 @@
     </tbody>
 </table>
 <h1>Allocation Result</h1>
+{% for allocation in allocations %}
 <table>
     <thead>
         <tr>
@@ -44,6 +51,7 @@
     </thead>
     <tbody>
         {% load html_filters %}
+
         {% for agent_index in agents_indices %}
             <tr>
                 <td>{{ agents|get_item:agent_index }}</td>
@@ -52,6 +60,9 @@
         {% endfor %}
     </tbody>
 </table>
+{% endfor %}
+
+
 {% endblock content %}
 
 

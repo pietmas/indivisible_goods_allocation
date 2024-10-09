@@ -3,9 +3,15 @@
 from django import forms
 
 ALGORITHM_CHOICES = [
-    ('round_robin', 'Round Robin'),
+    ('barman', 'Barman Algorithm'),
+    ('brute_force', 'Brute Force'),
+    ('envy_balance', 'Envy Balance'),
     ('envy_cycle', 'Envy Cycle'),
-    # Add other algorithms as needed
+    ('garg', 'Garg Algorithm'),
+    ('generalized_adjusted_winner', 'Generalized Adjusted Winner'),
+    ('minimax_envy_trade', 'Minimax Envy Trade'),
+    ('mnw', 'Maximum Nash Welfare'),
+    ('round_robin', 'Round Robin'),
 ]
 
 class NumberForm(forms.Form):

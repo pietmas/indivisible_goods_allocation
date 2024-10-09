@@ -144,3 +144,32 @@ label {
     margin-top: 10px;
     font-weight: bold;
 }
+
+.tooltip-error {
+    position: absolute;
+    background-color: #f44336; /* Red background */
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+    z-index: 1000;
+    font-size: 12px;
+    max-width: 200px;
+    word-wrap: break-word;
+}
+
+.form-group {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+/* Optional: Arrow pointing to the input */
+.tooltip-error::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -5px;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent #f44336 transparent transparent;
+}

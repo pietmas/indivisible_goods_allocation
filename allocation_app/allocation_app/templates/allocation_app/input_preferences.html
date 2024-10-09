@@ -6,9 +6,12 @@
 {% block sidebar %}
     <!-- Optionally, include a summary of selected parameters or navigation links -->
     <h2>Summary</h2>
+    <p><strong>Algorithm:</strong> {{ algorithm }}</p>
     <p><strong>Agents:</strong> {{ agents|length }}</p>
     <p><strong>Items:</strong> {{ items|length }}</p>
-    <p><strong>Algorithm:</strong> {{ algorithm }}</p>
+    <p>
+        <button href="{% url 'selections' %}">Return to Parameter Selection</button>
+    </p>
 {% endblock sidebar %}
 
 {% block content %}
