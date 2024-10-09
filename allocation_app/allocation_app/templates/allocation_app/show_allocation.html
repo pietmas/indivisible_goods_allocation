@@ -1,0 +1,57 @@
+<!-- allocation_app/templates/allocation_app/show_allocation.html -->
+
+{% extends 'allocation_app/base.html' %}
+{% block title %}Allocation Result - Allocation App{% endblock %}
+
+{% block sidebar %}
+    <!-- Optionally, include a summary of selected parameters or navigation links -->
+    <h2>Summary</h2>
+    <p><strong>Agents:</strong> {{ agents|length }}</p>
+    <p><strong>Items:</strong> {{ items|length }}</p>
+    <p><strong>Algorithm:</strong> {{ algorithm }}</p>
+{% endblock sidebar %}
+
+{% block content %}
+<h1>Preference Profile</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Item / Agent</th>
+            {% for agent in agents %}
+                <th>{{ agent }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% load html_filters %}
+        {% for item_index in items_indices %}
+            <tr>
+                <td>{{ items|get_item:item_index }}</td>         
+                {% for agent_index in agents_indices %}
+                    <td>{{ preferences|get_item:agent_index|get_item:item_index }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<h1>Allocation Result</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Agent</th>
+            <th>Allocated Items</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% load html_filters %}
+        {% for agent_index in agents_indices %}
+            <tr>
+                <td>{{ agents|get_item:agent_index }}</td>
+                <td>{{ allocation|get_item:agent_index | join:", " }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock content %}
+
+
