@@ -1,0 +1,72 @@
+<!-- allocation_app/templates/allocation_app/show_allocation.html -->
+
+{% extends 'allocation_app/base.html' %}
+{% block title %}Allocation Result - Allocation App{% endblock %}
+
+{% block sidebar %}
+    <!-- Optionally, include a summary of selected parameters or navigation links -->
+    <h2>Summary</h2>
+    <p><strong>Algorithm:</strong> {{ algorithm }}</p>
+    <p><strong>Agents:</strong> {{ agents|length }}</p>
+    <p><strong>Items:</strong> {{ items|length }}</p>
+    <p>
+        <a href="{% url 'selections' %}" class="button-link">Return to Parameter Selection</a>
+    </p>
+    <p>
+        <a href="{% url 'input_preferences' %}" class="button-link">Return to Input Preferences</a>
+    </p>
+{% endblock sidebar %}
+
+{% block content %}
+<h1>Preference Profile</h1>
+<div class="table-responsive">
+    <table>
+        <thead>
+            <tr>
+                <th>Item / Agent</th>
+                {% for item in items %}
+                    <th>{{ item }}</th>
+                {% endfor %}    
+            </tr>
+        </thead>
+        <tbody>
+            {% load html_filters %}
+            {% for agent_index in agents_indices %}       
+                <tr>
+                    <td>{{ agents|get_item:agent_index }}</td>         
+                    {% for item_index in items_indices %}
+                        <td>{{ preferences|get_item:agent_index|get_item:item_index }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<h1>Allocation Result</h1>
+{% for allocation in allocations %}
+<div class="table-responsive">
+    <table>
+        <thead>
+            <tr>
+                <th>Agent</th>
+                <th>Allocated Items</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% load html_filters %}
+
+            {% for agent_index in agents_indices %}
+                <tr>
+                    <td>{{ agents|get_item:agent_index }}</td>
+                    <td>{{ allocation|get_item:agent_index | join:", " }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endfor %}
+
+
+{% endblock content %}
+
+

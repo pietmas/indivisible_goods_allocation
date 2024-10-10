@@ -1,0 +1,46 @@
+{% extends 'allocation_app/base.html' %}
+{% block title %}Input Preferences - Allocation App{% endblock %}
+
+{% block sidebar %}
+    <h2>Summary</h2>
+    <p><strong>Algorithm:</strong> {{ algorithm }}</p>
+    <p><strong>Agents:</strong> {{ agents|length }}</p>
+    <p><strong>Items:</strong> {{ items|length }}</p>
+    <p>
+        <a href="{% url 'selections' %}" class="button-link">Change Parameters</a>
+    </p>
+{% endblock sidebar %}
+
+{% block content %}
+<h1>Input Preferences</h1>
+<form method="post" id="preferences-form">
+    {% csrf_token %}
+    <div class="table-responsive-horizontal">
+        <table>
+            <thead>
+                <tr>
+                    <th> Agents / Items </th>
+                    {% for item in items %}
+                        <th>{{ item }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            {% load html_filters %}
+            <tbody>
+                {% for agent_index, agent in agents|get_enumerate %}
+                    <tr>
+                        <td>{{ agent }}</td>
+                        {% for item_index, item in items|get_enumerate %}
+                            <td>
+                                <input type="number" name="preferences-{{ item }}-{{ agent }}" step="any" required
+                                       value="{% if preferences %}{{ preferences|get_item:agent_index|get_item:item_index }}{% endif %}">
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <button type="submit" class="button-link">Submit Preferences</button>
+</form>
+{% endblock content %}
