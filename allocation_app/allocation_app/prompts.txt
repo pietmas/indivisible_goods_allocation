@@ -1,0 +1,224 @@
+Can you make the overall layout a bit more fancy and pleasant, maybe by rounding a bit the angles, changin the colors and improving the design.
+
+This is the styles.css
+/* allocation_app/static/css/styles.css */
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    width: 80%;
+    margin: 50px auto;
+    background-color: #ffffff;
+    padding: 30px;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+}
+
+.main-content {
+    display: flex;
+    flex: 1;
+}
+
+
+h1, h2 {
+    color: #343a40;
+    margin-bottom: 20px;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    color: #495057;
+}
+
+input[type="number"],
+select {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+button[type="submit"] {
+    background-color: #007bff;
+    color: #ffffff;
+    padding: 12px 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+hr {
+    border: 1px solid #dee2e6;
+    margin: 30px 0;
+}
+
+.sidebar {
+    width: 250px;
+    padding: 20px;
+    background-color: #e9ecef;
+}
+
+.content {
+    flex: 1;
+    padding: 20px;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #dee2e6;
+}
+
+th, td {
+    padding: 8px;
+    text-align: center;
+}
+
+tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* Loading Animation */
+#loading {
+    display: none;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.loading-spinner {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #007bff; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    margin: auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+
+label {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.tooltip-error {
+    position: absolute;
+    background-color: #f44336; /* Red background */
+    color: white;
+    padding: 5px;
+    border-radius: 4px;
+    z-index: 1000;
+    font-size: 12px;
+    max-width: 200px;
+    word-wrap: break-word;
+}
+
+.form-group {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+/* Optional: Arrow pointing to the input */
+.tooltip-error::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -5px;
+    margin-top: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent #f44336 transparent transparent;
+}
+
+
+This is the main.js
+
+document.addEventListener('DOMContentLoaded', function() {
+    const preferencesForm = document.getElementById('preferences-form');
+    const loadingDiv = document.getElementById('loading');
+    if (preferencesForm && loadingDiv) {
+        preferencesForm.addEventListener('submit', function() {
+            // Show loading animation
+            loadingDiv.style.display = 'block';
+        });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all error messages
+    const errorMessages = document.querySelectorAll('.error-message');
+
+    errorMessages.forEach(function(errorSpan) {
+        // Get the corresponding input field
+        const inputField = errorSpan.previousElementSibling;
+
+        // Get the error message from the data attribute
+        const errorMessage = errorSpan.getAttribute('data-error');
+
+        // Create a tooltip element
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip-error';
+        tooltip.innerText = errorMessage;
+        tooltip.style.display = 'none'; // Hide by default
+
+        // Insert the tooltip into the DOM
+        inputField.parentNode.insertBefore(tooltip, inputField.nextSibling);
+
+        // Show tooltip on focus
+        inputField.addEventListener('focus', function() {
+            tooltip.style.display = 'block';
+        });
+
+        // Hide tooltip on blur
+        inputField.addEventListener('blur', function() {
+            tooltip.style.display = 'none';
+        });
+    });
+});
