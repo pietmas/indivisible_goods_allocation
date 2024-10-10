@@ -12,3 +12,7 @@ def index(sequence, position):
         return sequence[position]
     except IndexError:
         return None
+
+@register.filter
+def get_enumerate(array):
+    return enumerate(array)
