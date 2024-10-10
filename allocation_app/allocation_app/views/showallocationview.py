@@ -58,7 +58,7 @@ class ShowAllocationView(TemplateView):
         
         if not isinstance(allocations, list):
             allocations = [allocations]
-        print(allocations)
+
         # Prepare context data for rendering the allocation
         agents = [f'Agent {i}' for i in range(1, num_agents + 1)]
         items = [f'Item {i}' for i in range(1, num_items + 1)]

@@ -32,8 +32,7 @@
                         <td>{{ agent }}</td>
                         {% for item_index, item in items|get_enumerate %}
                             <td>
-                                <input type="number" name="preferences-{{ item }}-{{ agent }}" step="any" required
-                                       value="{% if preferences %}{{ preferences|get_item:agent_index|get_item:item_index }}{% endif %}">
+                                <input type="number" name="preferences-{{ item }}-{{ agent }}" step="any" required>
                             </td>
                         {% endfor %}
                     </tr>
