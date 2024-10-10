@@ -517,7 +517,6 @@ class Barman:
                 alpha2 = self.raising_prices_alpha2(i, a_h)
                 alpha3, _ = self.raising_prices_alpha3(i, a_h)
 
-
                 # Determine the smallest alpha
                 alpha = min([alpha1, alpha2, alpha3])
                 # Adjust the prices
