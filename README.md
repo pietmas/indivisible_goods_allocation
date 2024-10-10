@@ -14,9 +14,33 @@ This repository contains implementations of various algorithms for the allocatio
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
 
+## Web App for Fair Allocation
+
+In addition to the scripts and algorithms provided, we have implemented a web app for computing fair allocation. You can try it by installing the requirements and running the `run_app.py` file.
+
+### Instructions to Run the Web App
+
+1. Make sure you have Python installed.
+2. Install the required dependencies by running:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Start the web application by executing:
+
+   ```bash
+   python run_app.py
+   ```
+
+After starting the app, you can interact with it through your web browser to explore different allocation algorithms and scenarios.
+
 ## Introduction
 
 This project provides a collection of algorithms for solving the problem of allocating indivisible items to agents in a fair and efficient manner. It includes implementations of well-known algorithms and utility functions to facilitate experiments and comparisons.
+
+In addition to the scripts and algorithms provided, we have implemented a web app for computing fair allocation. You can try it by installing the requirements and running the `run_app.py` file.
+
 
 ## Features
 
@@ -79,6 +103,21 @@ The `utils` folder contains utility functions that assist with common tasks such
 - `check.py`: class that implement a checker for various allocaiton axioms,
 - `utils.py`: contains some useful functions as valuation profiles generator, ecc...
 - `visualization.py`: function to visualize the allocation as a bipartite graph.
+
+### Instructions to Run the Web App
+
+1. Make sure you have Python installed.
+2. Install the required dependencies by running:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Start the web application by executing:
+
+   ```bash
+   python run_app.py
+   ```
  
 ## License
 

@@ -518,7 +518,7 @@ class Barman:
                 alpha3, _ = self.raising_prices_alpha3(i, a_h)
 
                 # Determine the smallest alpha
-                alpha = np.min([alpha1, alpha2, alpha3])
+                alpha = min([alpha1, alpha2, alpha3])
                 # Adjust the prices
                 for j in x_h:
                     self.p[j] *= alpha
