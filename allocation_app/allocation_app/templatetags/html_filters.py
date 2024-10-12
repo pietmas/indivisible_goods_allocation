@@ -16,3 +16,4 @@ def index(sequence, position):
 @register.filter
 def get_enumerate(array):
     return enumerate(array)
+

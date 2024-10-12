@@ -1,0 +1,139 @@
+{
+    "algorithm1": {
+        "name": "Barman",
+        "description": [
+            "In the paper by <a href=\"https://arxiv.org/abs/1707.04731\">Barman, Krishnamurthy, and Vaish (2017)</a>, the authors investigate fairness (EF1) and efficiency (PO) in the context of resource allocation by constructing a Fisher Market that yields an EF1 allocation.",
+            "The paper introduces a pseudo-polynomial time algorithm designed to find allocations that are both EF1 and Pareto-efficient.",
+            "The Fisher Market Model serves as a framework in which buyers purchase goods to maximize their utility within budget constraints.",
+            "The algorithm starts with an initialization phase, where it determines a welfare-maximizing allocation by assigning each good to the agent who values it the most and setting the corresponding price for each good. If the resulting allocation and price vector meet a certain condition, the algorithm terminates and returns the outcome.",
+            "If the \\( 3 \\epsilon \\)-pEF1 condition is not satisfied, the algorithm proceeds to a second phase aimed at eliminating price-envy. In this phase, the algorithm identifies the least spender, constructs a hierarchy, and checks for any \\( 3 \\epsilon \\)-path violators. If violators are detected, the allocations are adjusted through a swap operation, and the process is repeated until the condition is met.",
+            "If the \\( 3 \\epsilon \\)-pEF1 condition remains unmet, the algorithm enters the price-rise phase. In this phase, the algorithm calculates three potential price-scaling factors, selects the smallest one, and adjusts the prices accordingly. If the condition is satisfied after this adjustment, the algorithm terminates; if not, it returns to the second phase for further refinement."
+        ],
+        "references": [
+            {
+                "title": "Finding Fair and Efficient Allocations",
+                "author": "Siddharth Barman, Sanath Kumar Krishnamurthy, Rohit Vaish",
+                "link": "https://arxiv.org/abs/1707.04731"
+            }
+        ]
+    },
+    "algorithm2": {
+        "name": "Brute Force",
+        "description": [
+            "The Brute Force algorithm exhaustively generates all possible allocations of goods among agents, ensuring that every potential allocation is considered.",
+            "After generating these allocations, the algorithm filters out those that do not satisfy the Envy-Free up to one item (EF1) criterion.",
+            "For the EF1-compliant allocations, it further checks whether each allocation is also Pareto Optimal (PO).",
+            "While this brute-force approach guarantees that all EF1 and PO allocations are found, it can be computationally intensive due to the exhaustive nature of generating all possible allocations. Although the algorithm incorporates methods to streamline the verification process, it may still be computationally prohibitive."
+        ]
+    },
+    "algorithm3": {
+        "name": "Envy Balance",
+        "description": [
+            "The algorithm developed by <a href=\"https://dl.acm.org/doi/10.5555/3367032.3367082\">He (2019)</a> for two agents that produces an EF1 allocation at each round and ensures resource monotonicity.",
+            "Let \\(G^T = \\{g_1, \\ldots, g_T\\}\\) represent the full set of items, and let \\(G_s = \\{g_1, \\ldots, g_s\\}\\) represent the subset of items up to round \\(s\\). The algorithm processes items one at a time in the order they arrive, building an allocation iteratively, with a candidate allocation \\(A^t\\) at each round \\(t\\). A counter \\(s\\) is used to keep track of the most recent round where the agents were envy-free. For rounds \\(s < t\\), let \\(A^{s,t}\\) represent the partial allocation constructed from round \\(s\\) to round \\(t\\), excluding the items in \\(G^s\\).",
+            "At each round \\(t\\), we first assign the new item \\(g_t\\) to an agent who is not envied in the partial allocation \\(A^{s,t}\\), for example, agent \\(a_1\\). The allocation is then updated, e.g., \\(A^t = (A_1^{t-1} \\cup g_t, A_2^{t-1})\\). If the agents start to envy each other in the partial allocation \\(A^{s,t}\\), we swap the bundles \\((A^{s,t}_1, A^{s,t}_2)\\). This step ensures there will always be an unenvied agent when assigning the next item. Finally, if the new allocation results in envy-freeness among the agents, we update \\(s\\) to \\(t\\)."
+        ],
+        "references": [
+            {
+                "title": "Achieving a fairer future by changing the past",
+                "author": "Jiafan He, Ariel D. Procaccia, Alexandros Psomas, David Zeng",
+                "link": "https://dl.acm.org/doi/10.5555/3367032.3367082"
+            }
+        ]
+    },
+    "algorithm4": {
+        "name": "Envy Cycle",
+        "description": [
+            "This algorithm, introduced by <a href=\"https://dl.acm.org/doi/10.1145/988772.988792\">Lipton (2004)</a>, was designed to establish an upper bound on the maximum envy present in an allocation.",
+            "The algorithm operates on the basis of an \\textit{envy graph} \\(G = (V, E)\\), where each vertex represents an agent \\(v \\in N\\), and a directed edge \\( i \\to j \\in E\\) exists if agent \\(i\\) envies the bundle allocated to agent \\(j\\). Formally, an edge \\(i \\to j\\) is present if \\( v_i(A_i) < v_i(A_j)\\), where \\(A_i\\) and \\(A_j\\) denote the bundles allocated to agents \\(i\\) and \\(j\\), respectively.",
+            "The algorithm begins with an initial allocation of goods to the agents and constructs the corresponding envy graph \\(G\\). It then examines the envy graph for directed cycles, which indicate a group of agents \\(i_1, \\dots, i_k\\) such that \\(v_{i_t}(A_{i_{t-1}}) > v_{i_t}(A_{i_t})\\) for \\(t \\geq 2\\), and \\(v_{i_1}(A_{i_k}) \\geq v_{i_1}(A_{i_1})\\). If such a cycle is detected, the algorithm reassigns the goods among the agents involved in the cycle to eliminate the cycle by performing a cycle swap.",
+            "For a cycle \\(C = (i_1, i_2, \\ldots, i_k)\\), the allocation is updated such that \\(A_{i_1}\\) is reassigned to \\(i_2\\), \\(A_{i_2}\\) is reassigned to \\(i_3\\), and so on, until \\(A_{i_k}\\) is reassigned to \\(i_1\\). The envy graph is then updated to reflect these new allocations and to remove any remaining envy among the agents. An agent who is not envied by others subsequently selects their most preferred goods from the remaining items, and this process is repeated.",
+            "The algorithm concludes when all items have been allocated and the envy graph is free of cycles. The selection of a new item by an unenvied agent ensures that the final allocation satisfies the EF1 condition and guarantees the algorithm's polynomial-time complexity."
+        ],
+        
+        "references": [
+            {
+                "title": "On approximately fair allocations of indivisible goods",
+                "author": "R. J. Lipton, E. Markakis, E. Mossel, A. Saberi",
+                "link": "https://dl.acm.org/doi/10.1145/988772.988792"
+            }
+        ]
+    },
+    "algorithm5": {
+        "name": "Garg",
+        "description": [
+            "This algorithm by <a href=\"https://www.sciencedirect.com/science/article/pii/S0304397523002451\">Garg and Murhekar (2023)</a>, is a step forward of the algorithm by <a href=\"https://arxiv.org/abs/1707.04731\">Barman, Krishnamurthy, and Vaish (2017)</a>, as they also focus on finding EF1 and Pareto-efficient allocations in a Fisher Market, but operates on the original preference profile without modification, allowing it to compute a fair and fractional Pareto Optimal (fPO) allocation.",
+            "The Fisher Market Model serves as a framework in which buyers purchase goods to maximize their utility within budget constraints.",
+            "The algorithm starts with an initialization phase, where it determines a welfare-maximizing allocation by assigning each good to the agent who values it the most and setting the corresponding price for each good. If the resulting allocation and price vector are price Envy-Free up to one good (pEF1), the algorithm terminates and returns the outcome.",
+            "While the pEF1 condition is unmet, if there is no pEF1-path violators for the least spenders, the algorithm enters the price-rise phase. In this phase, the algorithm calculates two potential price-scaling factors, selects the smallest one, and adjusts the prices accordingly.",
+            "If there are pEF1-path violators, the allocations are adjusted through a swap operation, and the process is repeated until the pEF1 condition is met."        
+        ],
+        "references": [
+            {
+                "title": "Computing fair and efficient allocations with few utility values",
+                "author": "Jugal Garg, Aniket Murhekar",
+                "link": "https://www.sciencedirect.com/science/article/pii/S0304397523002451"
+            }
+        ]
+    },
+    "algorithm6": {
+        "name": "Generalized Adjusted Winner",
+        "description": [
+            "This algorithm was described by <a href=\"https://arxiv.org/abs/1807.10684\">Aziz, Caragiannis (2021)</a>. Our implementation is specifically designed for goods, even though the original algorithm was thought for goods and chores. With minor modifications, it could be adapted to handle both goods and chores.",
+            "The algorithm begins by assigning all goods to a designated winner (\\(w\\)) and a loser (\\(\\ell\\)). It then calculates the ratio \\(\\frac{v_\\ell(g)}{v_w(g)}\\) for each good \\(g\\) and sorts the goods in descending order based on this ratio. Following this, goods are sequentially transferred from \\(w\\) to \\(\\ell\\) according to the sorted order until an EF1 allocation is achieved.",
+            "This process ensures that the loser does not envy the winner by more than one item, maintaining fairness in the allocation. Moreover, we can prove that the allocation at each iteration is Pareto optimal."
+        ],
+        "references": [
+            {
+                "title": "Fair allocation of combinations of indivisible goods and chores",
+                "author": "Haris Aziz, Ioannis Caragiannis, Ayumi Igarashi, Toby Walsh",
+                "link": "https://arxiv.org/abs/1807.10684"
+            }
+        ]
+    },
+    "algorithm7": {
+        "name": "MiniMax Envy Trade",
+        "description": [
+            "This mechanism allows agents to trade bundles whenever a new item is added to the set of goods. Our discussion will be limited to instances involving two agents.",
+            "The approach begins with an initial allocation, adds one item to the pool of items, and then computes all possible allocations that do not worsen the utility of any agent. Among these allocations, we select the one that minimizes the maximum envy between the agents.",
+            "Formally, let \\(\\mathcal{A}(M)\\) represent the set of all possible allocations of the items in \\(M\\). The envy experienced by agent \\(i\\) for a given allocation \\(A\\) is defined as: \\[\\text{envy}_i(A) = \\max \\{v_i(A_j) - v_i(A_i), 0\\}.\\]",
+            "Next, define the set \\(\\mathcal{B}=\\{A' \\in \\mathcal{A}(M) \\mid v_i(A'_i) \\geq v_i(A_i), \\forall i \\in N\\}\\). From this set, we will select the allocation that minimizes envy.",
+            "It is important to note that \\(\\mathcal{B}\\) is not empty, as the allocation \\(A' = (A_i)_{i \\in N}\\), where \\(A'_i = A_i\\) and \\(A'_j = A_j \\cup g\\) for some \\(j\\), is already a member of \\(\\mathcal{B}\\)."
+        ]
+    },
+    "algorithm8": {
+        "name": "Maximum Nash Welfare",
+        "description": [
+            "This function computes the allocation that maximizes the Nash Welfare. The Maximum Nash Welfare is defined as the geometric mean of the agents' utilities: \\[\\text{MNW} = \\sqrt[n]{\\prod_{i \\in N} u_i(A_i)}\\].",
+            "<a href=\"https://dl.acm.org/doi/10.1145/3355902\">Caragiannis (2019)</a> proved that any allocation that maximizes the Nash Welfare is EF1 and PO.",
+            "The problem is formulated as a discrete nonlinear optimization problem, where the Nash welfare is defined as the geometric mean of the agents' utilities. To maximize this, we optimize the sum of the logarithms of the agents' utilities.",
+            "The goal is to maximize the sum of the logarithms of the utilities. Let \\(x_{i,j} \\in \\{0,1\\}\\) be a binary variable that equals 1 if agent \\(i\\) receives good \\(j\\), and 0 otherwise.",
+            "\\[ \\text{Maximize} \\quad \\sum_{i \\in N} \\log \\left( \\sum_{j \\in M} x_{i,j} \\cdot v_i(j) \\right)\\]",
+            "\\[\\text{subject to} \\quad  \\sum_{i \\in N} x_{i,j} = 1, \\quad \\forall j \\in M\\]",  
+            "\\[\\kern 8.5em x_{i,j} \\in \\{0, 1\\}, \\quad \\forall i \\in N, j \\in M. \\]"
+        ],
+        "references": [
+            {
+                "title": "The Unreasonable Fairness of Maximum Nash Welfare",
+                "author": "Ioannis Caragiannis, David Kurokawa, Hervé Moulin, Ariel D. Procaccia, Nisarg Shah, Junxing Wang",
+                "link": "https://dl.acm.org/doi/10.1145/3355902"
+            }
+        ]
+    },
+    "algorithm9": {
+        "name": "Round Robin",
+        "description": [
+            "In this algorithm, agents take turns selecting their most preferred available good until all goods have been allocated. As shown by <a href=\"https://dl.acm.org/doi/10.1145/3355902\">Caragiannis (2019)</a>, this mechanism ensures an EF1 allocation.",
+            "The process begins by establishing the order in which the agents will select goods. Once the order is determined, the first agent chooses their most preferred good from the set of available items. The next agent then selects their most preferred good from the remaining items, and this sequence continues until all goods have been allocated.",
+            "It is clear that an agent selecting earlier in the order cannot envy an agent selecting later, as they have priority in choosing their most preferred items. Conversely, an agent selecting later may envy an agent who chose earlier, but this envy is limited to, at most, the single item chosen by the higher-priority agent during that round. Consequently, the procedure results in an EF1 allocation.",
+            "The Round-Robin mechanism guarantees that each agent has an equal opportunity to select their preferred goods in each round. Its simplicity and ease of understanding make it a popular choice for fair division in practical scenarios."
+        ],
+        "references": [
+            {
+                "title": "The Unreasonable Fairness of Maximum Nash Welfare",
+                "author": "Ioannis Caragiannis, David Kurokawa, Hervé Moulin, Ariel D. Procaccia, Nisarg Shah, Junxing Wang",
+                "link": "https://dl.acm.org/doi/10.1145/3355902"
+            }
+        ]
+    }
+}

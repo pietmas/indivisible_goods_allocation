@@ -36,3 +36,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+
+document.addEventListener("DOMContentLoaded", function() {
+    fetch("/static/data/algorithm_info.json")
+        .then(response => response.json()) 
+        .then(data => {
+            const dropdownContent = document.getElementById('algorithm-dropdown');
+
+            // Loop through the algorithms and dynamically add only the names to the dropdown
+            for (const key in data) {
+                if (data.hasOwnProperty(key)) {
+                    const algorithm = data[key];
+
+                    const algorithmLink = document.createElement('a');
+                    const algorithmNameEncoded = encodeURIComponent(algorithm.name); 
+                    algorithmLink.href = `/algorithm/${algorithmNameEncoded}/`; 
+                    algorithmLink.textContent = algorithm.name; 
+                    dropdownContent.appendChild(algorithmLink);
+                }
+            }
+        })
+        .catch(error => console.error('Error fetching the JSON:', error));
+});

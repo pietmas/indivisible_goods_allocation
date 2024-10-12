@@ -1,18 +1,29 @@
-<!-- allocation_app/templates/allocation_app/base.html -->
-
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Fair Allocation of Indivisible Items</title>
+    <title>{% block title %}Fair Allocation of Indivisible Items{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'styles/styles.css' %}">
     <script src="{% static 'scripts/main.js' %}"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Fair Allocation of Indivisible Items</h1>
+            <h1><a href="{% url 'home' %}">Fair Allocation of Indivisible Items</a></h1>
+            <!-- Navigation Bar -->
+            <nav class="navbar">
+                <ul>
+                    <li><a href="{% url 'selections' %}">Run Algorithm</a></li>
+                    <li><a href="https://example.com/definition">Definitions</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropbtn">Algorithm</a>
+                        <div class="dropdown-content" id="algorithm-dropdown">
+                            <!-- JavaScript will insert the algorithm names here -->
+                        </div>
+                    </li>
+                </ul>
+            </nav>
         </header>
         <div class="main-content">
             <aside class="sidebar">
@@ -25,5 +36,32 @@
             </section>
         </div>
     </div>
+
+    Fetch the JSON file and populate the dropdown
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            fetch("{% static 'json/algorithm_info.json' %}")
+                .then(response => response.json()) 
+                .then(data => {
+                    const dropdownContent = document.getElementById('algorithm-dropdown');
+    
+                    // Loop through the algorithms and dynamically add only the names to the dropdown
+                    for (const key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            const algorithm = data[key];
+    
+                            const algorithmLink = document.createElement('a');
+                            const algorithmNameEncoded = encodeURIComponent(algorithm.name); 
+                            algorithmLink.href = `/algorithm/${algorithmNameEncoded}/`; 
+                            algorithmLink.textContent = algorithm.name; 
+                            dropdownContent.appendChild(algorithmLink);
+                        }
+                    }
+                })
+                
+                .catch(error => console.error('Error fetching the JSON:', error));
+        });
+    </script>
+    
 </body>
 </html>
