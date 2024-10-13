@@ -22,6 +22,10 @@ class InputPreferencesView(TemplateView):
                     preferences[i][j] = float(*value)
                 except ValueError:
                     return HttpResponse("Please enter valid integer values for preferences.")
+        
+        # Save the preferences to the session
+        request.session['preferences'] = preferences
+        
         return redirect('show_allocation')
     
     def get_context_data(self, **kwargs):
