@@ -8,6 +8,7 @@ class ShowAllocationView(TemplateView):
     template_name = 'allocation_app/show_allocation.html'
     
     def get_context_data(self, **kwargs):
+        # Get the algorithm, number of agents, number of items, and preferences from the session
         algorithm = self.request.session.get('algorithm')
         num_agents = self.request.session.get('num_agents')
         num_items = self.request.session.get('num_items')

@@ -173,12 +173,6 @@ header h1 a:hover {
     border-bottom: 3px solid  #4a90e2;
 }
 
-/* Clear floats after the navigation bar
-.dropbtn::after {
-    content: 'v';
-    color: red;
-    padding-left: 5px;
-} 
 
 
 /* Form Styles */

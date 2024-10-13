@@ -11,7 +11,8 @@ class AlgorithmDetailView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        algorithm_name = self.kwargs.get('algorithm_name')  # Get the algorithm name from the URL
+        # Get the algorithm name from the URL
+        algorithm_name = self.kwargs.get('algorithm_name')  
 
         # Load the JSON file from the static folder
         json_file_path = os.path.join(settings.BASE_DIR, 'allocation_app', 'static', 'json', 'algorithm_info.json')
